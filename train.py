@@ -127,7 +127,7 @@ def training(
             1.0 - ssim(image, gt_image)
         )
         depth_loss = l1_loss(depth, gt_depth)
-        loss += 0.1 * depth_loss
+        loss += depth_loss
         loss.backward()
 
         iter_end.record()

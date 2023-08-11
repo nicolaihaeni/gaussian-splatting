@@ -8,7 +8,7 @@
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
-
+import cv2
 import torch
 import sys
 from datetime import datetime
@@ -30,8 +30,8 @@ def PILtoTorch(pil_image, resolution):
 
 
 def ArrayToTorch(array, resolution):
-    # resized_image = np.resize(array, resolution)
-    resized_image_torch = torch.from_numpy(array)
+    resized_image = cv2.resize(array, resolution, interpolation=cv2.INTER_NEAREST)
+    resized_image_torch = torch.from_numpy(resized_image)
 
     if len(resized_image_torch.shape) == 3:
         return resized_image_torch.permute(2, 0, 1)

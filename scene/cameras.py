@@ -30,6 +30,7 @@ class Camera(nn.Module):
         trans=np.array([0.0, 0.0, 0.0]),
         scale=1.0,
         data_device="cuda",
+        gt_depth=None,
     ):
         super(Camera, self).__init__()
 
@@ -51,6 +52,7 @@ class Camera(nn.Module):
             self.data_device = torch.device("cuda")
 
         self.original_image = image.clamp(0.0, 1.0)
+        self.depth = gt_depth if gt_depth is not None else None
         self.image_width = self.original_image.shape[2]
         self.image_height = self.original_image.shape[1]
 
@@ -84,6 +86,7 @@ class Camera(nn.Module):
         self.projection_matrix = self.projection_matrix.to(self.data_device)
         self.full_proj_transform = self.full_proj_transform.to(self.data_device)
         self.camera_center = self.camera_center.to(self.data_device)
+        self.depth.to(self.data_device)
 
     def from_device(self):
         device = torch.device("cpu")
@@ -91,7 +94,8 @@ class Camera(nn.Module):
         self.world_view_transform = self.world_view_transform.to(device)
         self.projection_matrix = self.projection_matrix.to(device)
         self.full_proj_transform = self.full_proj_transform.to(device)
-        self.camera_center = self.camera_center.to(device)
+        self.camera_center = self.camera_center.to(device)        
+        self.depth.to(device)
 
 
 class MiniCam:

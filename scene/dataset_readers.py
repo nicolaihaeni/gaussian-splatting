@@ -78,7 +78,9 @@ def getNerfppNorm(cam_info):
     return {"translate": translate, "radius": radius}
 
 
-def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
+def readColmapCameras(
+    cam_extrinsics, cam_intrinsics, images_folder, depths_folder=None
+):
     cam_infos = []
     for idx, key in enumerate(cam_extrinsics):
         sys.stdout.write("\r")
@@ -110,13 +112,15 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
             ), "Colmap camera model not handled: only undistorted datasets (PINHOLE or SIMPLE_PINHOLE cameras) supported!"
 
         image_path = os.path.join(images_folder, os.path.basename(extr.name))
-        depth_path = os.path.join(
-            images_folder.replace("images", "depths"),
-            os.path.basename(extr.name).replace(".png", ".exr"),
-        )
+        depth = None
+        if depths_folder is not None:
+            depth_path = os.path.join(
+                depths_folder,
+                os.path.basename(extr.name).replace(".png", ".exr"),
+            )
+            depth = imageio.imread(depth_path)
         image_name = os.path.basename(image_path).split(".")[0]
         image = Image.open(image_path)
-        depth = imageio.imread(depth_path)
 
         cam_info = CameraInfo(
             uid=uid,
@@ -171,7 +175,7 @@ def storePly(path, xyz, rgb):
     ply_data.write(path)
 
 
-def readColmapSceneInfo(path, images, eval, llffhold=8):
+def readColmapSceneInfo(path, images, eval, llffhold=8, depths=None):
     try:
         cameras_extrinsic_file = os.path.join(path, "sparse/0", "images.bin")
         cameras_intrinsic_file = os.path.join(path, "sparse/0", "cameras.bin")
@@ -184,10 +188,12 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
         cam_intrinsics = read_intrinsics_text(cameras_intrinsic_file)
 
     reading_dir = "images" if images == None else images
+    depths_folder = os.path.join(path, depths) if depths is not None else None
     cam_infos_unsorted = readColmapCameras(
         cam_extrinsics=cam_extrinsics,
         cam_intrinsics=cam_intrinsics,
         images_folder=os.path.join(path, reading_dir),
+        depths_folder=depths_folder,
     )
     cam_infos = sorted(cam_infos_unsorted.copy(), key=lambda x: x.image_name)
 
@@ -227,7 +233,9 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
     return scene_info
 
 
-def readCamerasFromTransforms(path, transformsfile, white_background, extension=".png"):
+def readCamerasFromTransforms(
+    path, transformsfile, white_background, extension=".png", depth_path=None
+):
     cam_infos = []
 
     with open(os.path.join(path, transformsfile)) as json_file:
@@ -237,11 +245,6 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
         frames = contents["frames"]
         for idx, frame in enumerate(frames):
             cam_name = os.path.join(path, frame["file_path"] + extension)
-            depth_name = os.path.join(
-                path.replace("images", "depths"),
-                frame["file_path"].replace(".png", ".exr"),
-            )
-
             matrix = np.linalg.inv(np.array(frame["transform_matrix"]))
             R = -np.transpose(matrix[:3, :3])
             R[:, 0] = -R[:, 0]
@@ -250,7 +253,14 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
             image_path = os.path.join(path, cam_name)
             image_name = Path(cam_name).stem
             image = Image.open(image_path)
-            depth = imageio.imread(depth_name)
+
+            depth = None
+            if depth_path is not None:
+                depth_name = os.path.join(
+                    depth_path,
+                    frame["file_path"].replace(".png", ".exr"),
+                )
+                depth = imageio.imread(depth_name)
 
             im_data = np.array(image.convert("RGBA"))
 
@@ -285,14 +295,15 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
     return cam_infos
 
 
-def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
+def readNerfSyntheticInfo(path, white_background, eval, extension=".png", depths=None):
     print("Reading Training Transforms")
+    depths_folder = os.path.join(path, depths) if depths is not None else None
     train_cam_infos = readCamerasFromTransforms(
-        path, "transforms_train.json", white_background, extension
+        path, "transforms_train.json", white_background, extension, depths_folder
     )
     print("Reading Test Transforms")
     test_cam_infos = readCamerasFromTransforms(
-        path, "transforms_test.json", white_background, extension
+        path, "transforms_test.json", white_background, extension, depths_folder
     )
 
     if not eval:
@@ -334,4 +345,3 @@ sceneLoadTypeCallbacks = {
     "Colmap": readColmapSceneInfo,
     "Blender": readNerfSyntheticInfo,
 }
-

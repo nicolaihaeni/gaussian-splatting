@@ -86,7 +86,8 @@ class Camera(nn.Module):
         self.projection_matrix = self.projection_matrix.to(self.data_device)
         self.full_proj_transform = self.full_proj_transform.to(self.data_device)
         self.camera_center = self.camera_center.to(self.data_device)
-        self.depth.to(self.data_device)
+        if self.depth is not None:
+            self.depth.to(self.data_device)
 
     def from_device(self):
         device = torch.device("cpu")
@@ -94,8 +95,9 @@ class Camera(nn.Module):
         self.world_view_transform = self.world_view_transform.to(device)
         self.projection_matrix = self.projection_matrix.to(device)
         self.full_proj_transform = self.full_proj_transform.to(device)
-        self.camera_center = self.camera_center.to(device)        
-        self.depth.to(device)
+        self.camera_center = self.camera_center.to(device)
+        if self.depth is not None:
+            self.depth.to(device)
 
 
 class MiniCam:

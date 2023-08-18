@@ -107,7 +107,6 @@ def training(
             viewpoint_stack = scene.getTrainCameras().copy()
         viewpoint_cam = viewpoint_stack.pop(randint(0, len(viewpoint_stack) - 1))
         viewpoint_cam.to_device()
-        gt_depth = viewpoint_cam.depth.cuda()
 
         # Render
         if (iteration - 1) == debug_from:
@@ -129,8 +128,11 @@ def training(
             1.0 - ssim(image, gt_image)
         )
 
-        depth_loss = l1_loss(depth, gt_depth)
-        loss += depth_loss
+        if args.use_depth:
+            gt_depth = viewpoint_cam.depth.cuda()
+            depth_loss = l1_loss(depth, gt_depth)
+            loss += depth_loss
+
         loss.backward()
 
         iter_end.record()

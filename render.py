@@ -22,21 +22,22 @@ from arguments import ModelParams, PipelineParams, get_combined_args
 from gaussian_renderer import GaussianModel
 
 
-def render_set(model_path, name, iteration, views, gaussians, pipeline, background):
+def render_set(
+    model_path, name, iteration, views, gaussians, pipeline, background, use_depth=False
+):
     render_path = os.path.join(model_path, name, "ours_{}".format(iteration), "renders")
     gts_path = os.path.join(model_path, name, "ours_{}".format(iteration), "gt")
     depth_path = os.path.join(model_path, name, "ours_{}".format(iteration), "depth")
 
     makedirs(render_path, exist_ok=True)
     makedirs(gts_path, exist_ok=True)
-    makedirs(depth_path, exist_ok=True)
+    if use_depth:
+        makedirs(depth_path, exist_ok=True)
 
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         view.to_device()
         results = render(view, gaussians, pipeline, background)
         rendering = results["render"]
-        depth = results["depth"]
-        depth = depth / (depth.max() + 1e-5)
 
         gt = view.original_image[0:3, :, :]
         torchvision.utils.save_image(
@@ -46,9 +47,13 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
             gt, os.path.join(gts_path, "{0:05d}".format(idx) + ".png")
         )
 
-        torchvision.utils.save_image(
-            depth, os.path.join(depth_path, "{0:05d}".format(idx) + ".png")
-        )
+        if use_depth:
+            depth = results["depth"]
+            depth = depth / (depth.max() + 1e-5)
+            torchvision.utils.save_image(
+                depth, os.path.join(depth_path, "{0:05d}".format(idx) + ".png")
+            )
+
 
 def render_sets(
     dataset: ModelParams,
@@ -56,6 +61,7 @@ def render_sets(
     pipeline: PipelineParams,
     skip_train: bool,
     skip_test: bool,
+    use_depth: bool,
 ):
     with torch.no_grad():
         gaussians = GaussianModel(dataset.sh_degree)
@@ -73,6 +79,7 @@ def render_sets(
                 gaussians,
                 pipeline,
                 background,
+                use_depth=use_depth,
             )
 
         if not skip_test:
@@ -84,6 +91,7 @@ def render_sets(
                 gaussians,
                 pipeline,
                 background,
+                use_depth=use_depth,
             )
 
 
@@ -108,5 +116,5 @@ if __name__ == "__main__":
         pipeline.extract(args),
         args.skip_train,
         args.skip_test,
+        args.use_depth,
     )
-

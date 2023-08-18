@@ -114,8 +114,12 @@ python train.py -s <path to COLMAP or NeRF Synthetic dataset>
   Path where the trained model should be stored (```output/<random>``` by default).
   #### --images / -i
   Alternative subdirectory for COLMAP images (```images``` by default).
+  #### --depths/ -i
+  subdirectory for depths (```depths``` by default).
   #### --eval
   Add this flag to use a MipNeRF360-style training/test split for evaluation.
+  #### --use_depths
+  Add this flag to use depth supervision
   #### --resolution / -r
   Specifies resolution of the loaded images before training. If provided ```1, 2, 4``` or ```8```, uses original, 1/2, 1/4 or 1/8 resolution, respectively. For all other values, rescales the width to the given number while maintaining image aspect. **If not set and input image width exceeds 1.6K pixels, inputs are automatically rescaled to this target.**
   #### --data_device

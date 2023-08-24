@@ -101,6 +101,10 @@ conda env create --file environment.yml --prefix <Drive>/<env_path>/gaussian_spl
 conda activate <Drive>/<env_path>/gaussian_splatting
 ```
 
+#### Colab
+
+User [camenduru](https://github.com/camenduru) was kind enough to provide a Colab template that uses pre-built wheels for a quick and easy access to the method. Please check it out [here](https://github.com/camenduru/gaussian-splatting-colab).
+
 #### Modifications
 
 If you can afford the disk space, we recommend using our environment files for setting up a training environment identical to ours. If you want to make modifications, please note that major version changes might affect the results of our method. However, our (limited) experiments suggest that the codebase works just fine inside a more up-to-date environment (Python 3.8, PyTorch 2.0.0, CUDA 12). Make sure to create an environment where PyTorch and its CUDA runtime version match and the installed CUDA SDK has no major version difference with PyTorch's CUDA version.

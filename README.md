@@ -103,7 +103,7 @@ conda activate <Drive>/<env_path>/gaussian_splatting
 
 #### Colab
 
-User [camenduru](https://github.com/camenduru) was kind enough to provide a Colab template that uses pre-built wheels for a quick and easy access to the method. Please check it out [here](https://github.com/camenduru/gaussian-splatting-colab).
+User [camenduru](https://github.com/camenduru) was kind enough to provide a Colab template that uses pre-built wheels for quick and easy access to the method. Please check it out [here](https://github.com/camenduru/gaussian-splatting-colab).
 
 #### Modifications
 
